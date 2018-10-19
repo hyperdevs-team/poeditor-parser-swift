@@ -79,16 +79,7 @@ extension VariableType {
     }
     
     func swiftParameter(key: String) -> String {
-        return self.argumentToSnakeCase(key) + ": " + swiftType
-    }
-    
-    func argumentToSnakeCase(_ argument: String) -> String {
-        return argument
-            .split(separator: "_")  // split to components
-            .map(String.init)   // convert subsequences to String
-            .enumerated()  // get indices
-            .map { $0.offset > 0 ? $0.element.capitalized : $0.element.lowercased() } // added lowercasing
-            .joined()
+        return key.snakeCased() + ": " + swiftType
     }
 }
 
@@ -127,7 +118,7 @@ public struct Translation {
         return NSLocalizedString()
         }
         */
-        return "    static var \(prettyKey): String {\n        return \(localizedStringFunction)(\"\(rawKey)\")\n    }\n"
+        return "\tstatic var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\")\n\t}\n"
     }
     
     private func generateVariableSwiftCode() -> String {
@@ -136,9 +127,14 @@ public struct Translation {
         return ""
         }
         */
-        let parameters = variables.map{$0.type.swiftParameter(key: $0.parameterKey)}.joined(separator: ", ")
-        let localizedArguments = variables.map{ $0.parameterKey }.joined(separator: ", ")
-        return "    static func \(prettyKey)(\(parameters)) -> String {\n        return \(localizedStringFunction)(\"\(rawKey)\", \(localizedArguments))\n    }"
+        let parameters = variables
+            .map { $0.type.swiftParameter(key: $0.parameterKey) }
+            .joined(separator: ", ")
+        let localizedArguments = variables
+            .map { $0.parameterKey }
+            .map { $0.snakeCased() }
+            .joined(separator: ", ")
+        return "\tstatic func \(prettyKey)(\(parameters)) -> String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", \(localizedArguments))\n\t}"
     }
     
 }
@@ -348,6 +344,24 @@ extension String {
 
     var lowercaseFirst: String {
         return first.lowercased() + String(dropFirst())
+    }
+    
+    mutating func snakeCase() -> String {
+        return self
+            .split(separator: "_")  // split to components
+            .map(String.init)   // convert subsequences to String
+            .enumerated()  // get indices
+            .map { $0.offset > 0 ? $0.element.capitalized : $0.element.lowercased() } // added lowercasing
+            .joined()
+    }
+    
+    func snakeCased() -> String {
+        return self
+            .split(separator: "_")  // split to components
+            .map(String.init)   // convert subsequences to String
+            .enumerated()  // get indices
+            .map { $0.offset > 0 ? $0.element.capitalized : $0.element.lowercased() } // added lowercasing
+            .joined()
     }
 }
 
