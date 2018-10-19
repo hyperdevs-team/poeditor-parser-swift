@@ -15,11 +15,11 @@ struct Variable {
     
     // iOS (Used from TRANSLATION)
     var parameterKey: String {
-        /* 
+        /*
          We need to do some herustics here since the format is not standarized
-         Examples: 
-            - paginas del libro
-            - alreadyReadPages <- this should not be captialized (or we'll lose the Read and Pages capital letters)
+         Examples:
+         - paginas del libro
+         - alreadyReadPages <- this should not be captialized (or we'll lose the Read and Pages capital letters)
          */
         
         let words = rawKey.split(separator: " ").map(String.init)
@@ -114,19 +114,19 @@ public struct Translation {
     
     private func generateVariableLessSwiftCode() -> String {
         /*
-        static var Welcome: String {
-        return NSLocalizedString()
-        }
-        */
-        return "\tstatic var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\")\n\t}\n"
+         static var Welcome: String {
+         return NSLocalizedString()
+         }
+         */
+        return "\tstatic var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", comment: \"\")\n\t}\n"
     }
     
     private func generateVariableSwiftCode() -> String {
         /*
-        static func ReadBooksKey(readNumber: Int) -> String {
-        return ""
-        }
-        */
+         static func ReadBooksKey(readNumber: Int) -> String {
+         return ""
+         }
+         */
         let parameters = variables
             .map { $0.type.swiftParameter(key: $0.parameterKey) }
             .joined(separator: ", ")
@@ -134,7 +134,7 @@ public struct Translation {
             .map { $0.parameterKey }
             .map { $0.snakeCased() }
             .joined(separator: ", ")
-        return "\tstatic func \(prettyKey)(\(parameters)) -> String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", \(localizedArguments))\n\t}"
+        return "\tstatic func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", comment: \"\"), \(localizedArguments))\n\t}"
     }
     
 }
@@ -148,14 +148,14 @@ enum SwiftCodeGeneratorConstants {
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         return formatter
     }()
-
+    
     static let rootObjectHeader = """
     // Generated using POEditorParser
     // DO NOT EDIT
     // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
-
+    
     // swiftlint:disable all
-
+    
     enum Literals {
     """
     static let rootObjectFooter = "\n}\n// swiftlint:enable all\n"
@@ -205,6 +205,19 @@ public class FileCodeGenerator: SwiftCodeGenerator {
     }
 }
 
+public class StringsFileGenerator {
+    let fileHandle: FileHandle
+    
+    public init(fileHandle: FileHandle) {
+        self.fileHandle = fileHandle
+    }
+    
+    public func generateCode(translations: [Translation]) {
+        for t in translations {
+            fileHandle += "\"\(t.rawKey)\" = \"\(t.localizedValue)\";\n"
+        }
+    }
+}
 
 public func +=(lhs: FileHandle, rhs: String) {
     lhs.write(rhs.data(using: .utf8)!)
@@ -247,7 +260,7 @@ public class StringTranslationParser: TranslationParser {
                 var key: NSString?
                 s.scanUpTo("\"", into: &key)
                 s.scanLocation += 1
-
+                
                 s.scanUpTo("\"", into: nil)
                 s.scanLocation += 1
                 
@@ -279,15 +292,15 @@ enum TranslationValueParser {
          Algorithm:
          
          1. Scan up to { into a buffer.
-            ¿Scanned something?
-            1.1 YES: Add that to the localizedString result
+         ¿Scanned something?
+         1.1 YES: Add that to the localizedString result
          2. Check if we are are at the end
-            2.1 YES: we have finished. Go to END
-            2.2 NO: Go to 3
+         2.1 YES: we have finished. Go to END
+         2.2 NO: Go to 3
          3. Scan for a number
-            Found?
-            3.1: YES: we need to take into account order. Go to 4
-            3.2: NO: Go to 4
+         Found?
+         3.1: YES: we need to take into account order. Go to 4
+         3.2: NO: Go to 4
          4. Scan up to '}}' into a variable. Both adding it to the list and adding the localizedRepresentation to the localizedString result.
          5. Go to 1.
          
@@ -300,7 +313,7 @@ enum TranslationValueParser {
         while true {
             var out: NSString?
             s.scanUpTo("{", into: &out)
-
+            
             if let o = out {
                 localizedString += o as String
             }
@@ -343,7 +356,7 @@ extension String {
     var first: String {
         return String(prefix(1))
     }
-
+    
     var lowercaseFirst: String {
         return first.lowercased() + String(dropFirst())
     }
