@@ -79,7 +79,16 @@ extension VariableType {
     }
     
     func swiftParameter(key: String) -> String {
-        return key + ": " + swiftType
+        return self.argumentToSnakeCase(key) + ": " + swiftType
+    }
+    
+    func argumentToSnakeCase(_ argument: String) -> String {
+        return argument
+            .split(separator: "_")  // split to components
+            .map(String.init)   // convert subsequences to String
+            .enumerated()  // get indices
+            .map { $0.offset > 0 ? $0.element.capitalized : $0.element.lowercased() } // added lowercasing
+            .joined()
     }
 }
 
@@ -135,7 +144,22 @@ public struct Translation {
 }
 
 enum SwiftCodeGeneratorConstants {
-    static let rootObjectHeader = "enum Literals {\n"
+    static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .iso8601)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        return formatter
+    }()
+
+    static let rootObjectHeader = """
+    // Generated using POEditorParser
+    // DO NOT EDIT
+    // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
+    
+    enum Literals {
+    """
     static let rootObjectFooter = "\n}"
     
     static let methodOrVariableHeader = "\n"
@@ -284,7 +308,6 @@ enum TranslationValueParser {
             }
             
             if s.isAtEnd {
-                print("scan finished")
                 break
             }
             s.scanLocation += 1
@@ -294,7 +317,6 @@ enum TranslationValueParser {
             
             if intScanned {
                 // ordered var
-                print("intScanned!")
             } else {
                 //unordered var
             }
@@ -328,67 +350,4 @@ extension String {
         return first.lowercased() + String(dropFirst())
     }
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////
-//
-//func printUsageAndExit() {
-//    print("Usage: polocalize -p input_path -o output_path")
-//    exit(0)
-//}
-//
-//if Process.arguments.count != 1 + 2 * 2 {
-//    printUsageAndExit()
-//}
-//
-//var inputPath: String!
-//var outputPath: String!
-//for i in 1.stride(through: 4, by: 2) {
-//    let arg = Process.arguments[i]
-//    switch arg {
-//    case "-p": inputPath = Process.arguments[i + 1]
-//    case "-o": outputPath = Process.arguments[i + 1]
-//    default: printUsageAndExit()
-//    }
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////
-//
-//let fileContents = try! String(contentsOfFile: inputPath).stringByReplacingOccurrencesOfString("\\\\n", withString: "\\n", options: .LiteralSearch, range: nil)
-//
-//var result = ""
-//
-//let scanner = NSScanner(string: fileContents)
-//scanner.charactersToBeSkipped = nil
-//
-//var tempString: NSString?
-//var variable: NSString?
-//
-//func appendAndClear() {
-//    if let s = tempString {
-//        result += s as String
-//        tempString = nil
-//    }
-//}
-//
-//for ;; {
-//    let success = scanner.scanUpToString("{{", intoString: &tempString)
-//    
-//    if !success || scanner.atEnd {
-//        appendAndClear() // What we had up to the {{ is valid
-//        break
-//    }
-//    
-//    appendAndClear() // What we had up to the {{ is valid
-//    
-//    scanner.scanLocation += 2
-//    scanner.scanUpToString("}}", intoString: &variable)
-//    scanner.scanLocation += 2
-//    
-//    let variableType = VariableType(string: variable! as String)
-//    result += variableType.localizedRepresentation
-//}
-//
-//try! result.writeToFile(outputPath, atomically: true, encoding: NSUTF8StringEncoding)
-//print("Sucess! saved file at ", outputPath)
 
