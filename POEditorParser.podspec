@@ -21,6 +21,7 @@ Pod::Spec.new do |s|
 
   s.source_files  = "Sources/"
   s.public_header_files = "Sources/POEditorParser.h"
+  s.preserve_paths = [ "bin/poe" ]
   s.pod_target_xcconfig = { 'SWIFT_VERSION' => '4.2' }
   s.swift_version = '4.2'
   s.static_framework = true
