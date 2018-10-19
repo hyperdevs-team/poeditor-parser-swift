@@ -153,6 +153,7 @@ enum SwiftCodeGeneratorConstants {
     // Generated using POEditorParser
     // DO NOT EDIT
     // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
+    // swiftlint:disable:all
     
     enum Literals {
     """
