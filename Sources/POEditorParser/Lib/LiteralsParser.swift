@@ -153,11 +153,12 @@ enum SwiftCodeGeneratorConstants {
     // Generated using POEditorParser
     // DO NOT EDIT
     // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
-    // swiftlint:disable:all
-    
+
+    // swiftlint:disable all
+
     enum Literals {
     """
-    static let rootObjectFooter = "\n}"
+    static let rootObjectFooter = "\n}\n// swiftlint:enable all\n"
     
     static let methodOrVariableHeader = "\n"
 }
