@@ -162,6 +162,8 @@ enum SwiftCodeGeneratorConstants {
     // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
     
     // swiftlint:disable all
+
+    import Foundation
     
     enum Literals {
     """
