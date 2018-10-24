@@ -34,6 +34,19 @@ let main = command(
                 .bodyString
             
             print("Successfully downloaded the latest strings file from POEditor!".green)
+            print("Checking for changes in the downloaded strings file...".blue)
+
+            if FileManager.default.fileExists(atPath: stringsfile) {
+                if let localStringsfile = FileHandle(forReadingAtPath: stringsfile) {
+                    if let localStringsfileContent = String(data: localStringsfile.readDataToEndOfFile(), encoding: .utf8) {
+                        if localStringsfileContent == translationString {
+                            print("No changes detected between local and remote strings file".green)
+                            print("Exiting!".green)
+                            return
+                        }
+                    }
+                }
+            }
             print("Parsing strings file...".blue)
             let parser = StringTranslationParser(translation: translationString)
             let translations = parser.parse()
