@@ -37,9 +37,13 @@ let main = command(
             print("Checking for changes in the downloaded strings file...".blue)
 
             if FileManager.default.fileExists(atPath: stringsfile) {
+                print("Found previous strings file at \(stringsfile)".blue)
                 if let localStringsfile = FileHandle(forReadingAtPath: stringsfile) {
+                    print("Reading contents of strings file at \(stringsfile)".blue)
                     if let localStringsfileContent = String(data: localStringsfile.readDataToEndOfFile(), encoding: .utf8) {
-                        if localStringsfileContent == translationString {
+                        let removedInts = try translationString.replacingRegexMatches(of: "\\{[0-9]*\\{\\w+number\\}\\}", with: "%d")
+                        let parsedRemoteString = try removedInts.replacingRegexMatches(of: "\\{[0-9]*\\{\\w+\\}\\}", with: "%@")
+                        if localStringsfileContent.replacingOccurrences(of: "\\n", with: "") == parsedRemoteString.replacingOccurrences(of: "\\n", with: "") {
                             print("No changes detected between local and remote strings file".green)
                             print("Exiting!".green)
                             return

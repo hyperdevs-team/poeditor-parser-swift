@@ -1,3 +1,10 @@
+//
+//  Swift+Extensions.swift
+//  POEditorParser
+//
+//  Created by Jorge Revuelta on 24/10/18.
+//
+
 import Foundation
 
 enum Literals {
