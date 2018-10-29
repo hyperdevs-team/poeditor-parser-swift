@@ -277,7 +277,7 @@ public class StringTranslationParser: TranslationParser {
                 s.scanUpTo("\"", into: &value)
                 s.scanLocation += 1
                 
-                translations.append(Translation(rawKey: key! as String, rawValue: value! as String))
+                translations.append(Translation(rawKey: key! as String, rawValue: value as String? ?? ""))
                 
             }
             if s.isAtEnd {
