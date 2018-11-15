@@ -274,10 +274,14 @@ public class StringTranslationParser: TranslationParser {
                 s.scanLocation += 1
                 
                 var value: NSString?
-                s.scanUpTo("\"", into: &value)
-                s.scanLocation += 1
+                s.scanUpTo("\";", into: &value)
+                s.scanLocation += 2
+                var finalValue: NSString?
+                if let value = value {
+                    finalValue = value.substring(to: value.length - 1).unescaped as NSString
+                }
                 
-                translations.append(Translation(rawKey: key! as String, rawValue: value as String? ?? ""))
+                translations.append(Translation(rawKey: key! as String, rawValue: finalValue as String? ?? ""))
                 
             }
             if s.isAtEnd {

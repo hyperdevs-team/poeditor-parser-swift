@@ -13,4 +13,14 @@ extension String {
         let range = NSMakeRange(0, self.count)
         return regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: replacing)
     }
+    
+    var unescaped: String {
+        let entities = ["\0", "\t", "\n", "\r", "\"", "\'", "\\"]
+        var current = self
+        for entity in entities {
+            let descriptionCharacters = entity.debugDescription.dropFirst().dropLast()
+            current = current.replacingOccurrences(of: descriptionCharacters, with: entity)
+        }
+        return current
+    }
 }
