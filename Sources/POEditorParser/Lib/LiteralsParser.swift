@@ -278,7 +278,7 @@ public class StringTranslationParser: TranslationParser {
                 s.scanLocation += 2
                 var finalValue: NSString?
                 if let value = value {
-                    finalValue = value.substring(to: value.length).unescaped as NSString
+                    finalValue = value.substring(to: value.length) as NSString
                 }
                 
                 translations.append(Translation(rawKey: key! as String, rawValue: finalValue as String? ?? ""))

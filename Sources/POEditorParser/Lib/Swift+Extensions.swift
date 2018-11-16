@@ -18,7 +18,7 @@ extension String {
         let entities = ["\0", "\t", "\n", "\r", "\"", "\'", "\\"]
         var current = self
         for entity in entities {
-            let descriptionCharacters = entity.debugDescription.dropFirst().dropLast()
+            let descriptionCharacters = entity.dropFirst().dropLast()
             current = current.replacingOccurrences(of: descriptionCharacters, with: entity)
         }
         return current
