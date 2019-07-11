@@ -1,5 +1,5 @@
 # POEditor-Parser
-A simple generator of swift files from a given localized `strings` file.
+A simple generator of swift files from a given localized POeditor `strings` file.
 
 [![Release Version](https://img.shields.io/github/release/bq/poeditor-parser-swift.svg)](https://github.com/bq/poeditor-parser-swift/releases) 
 [![Release Date](https://img.shields.io/github/release-date/bq/poeditor-parser-swift.svg)](https://github.com/bq/poeditor-parser-swift/releases)
@@ -29,4 +29,7 @@ A simple generator of swift files from a given localized `strings` file.
 
 ## License
 
-POEditor-Parser is available under the Apache 2.0. See the LICENSE file for more info.    
+POEditor-Parser is available under the Apache 2.0. See the LICENSE file for more info.  
+  
+## Android alternative
+If you want a similar solution for your Android projects, check this out: [poeditor-android-gradle-plugin](https://github.com/bq/poeditor-android-gradle-plugin)
