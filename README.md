@@ -7,6 +7,9 @@ A simple generator of swift files from a given localized `strings` file.
 [![Platform](https://img.shields.io/cocoapods/p/POEditor-Parser.svg?style=flat)](https://cocoapods.org/pods/POEditor-Parser)
 [![GitHub](https://img.shields.io/github/license/bq/poeditor-parser-swift.svg)](https://github.com/bq/poeditor-parser-swift/blob/master/LICENSE)
 
+[![Build Status](https://travis-ci.org/bq/poeditor-parser-swift.svg?branch=master)](https://travis-ci.org/bq/poeditor-parser-swift)
+[![codecov](https://codecov.io/gh/bq/poeditor-parser-swift/branch/master/graph/badge.svg)](https://codecov.io/gh/bq/poeditor-parser-swift)
+
 ## Usage
 
 ```ogdl
