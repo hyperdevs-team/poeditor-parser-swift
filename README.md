@@ -31,5 +31,5 @@ A simple generator of swift files from a given localized POeditor `strings` file
 
 POEditor-Parser is available under the Apache 2.0. See the LICENSE file for more info.  
   
-## Android alternative
+## Android alternative
 If you want a similar solution for your Android projects, check this out: [poeditor-android-gradle-plugin](https://github.com/bq/poeditor-android-gradle-plugin)
