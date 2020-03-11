@@ -10,15 +10,28 @@ A simple generator of swift files from a given localized POeditor `strings` file
 [![Build Status](https://travis-ci.org/bq/poeditor-parser-swift.svg?branch=master)](https://travis-ci.org/bq/poeditor-parser-swift)
 [![codecov](https://codecov.io/gh/bq/poeditor-parser-swift/branch/master/graph/badge.svg)](https://codecov.io/gh/bq/poeditor-parser-swift)
 
-## Usage
+## Installation
 
-```ogdl
-/bin/poe $APITOKEN $PROJECTID $LANGUAGE
+```
+$ make
 ```
 
-### Options:
-* `--stringfile` [default: Localizable.strings] - The input POEditor strings file directory.
-* `--swiftfile` [default: Literals.swift] - The output Swift file directory.
+## Usage
+```
+Usage:
+
+    $ poe <APITOKEN> <id> <language>
+
+Arguments:
+
+    APITOKEN - The POEditor API token
+    id - The id of the project
+    language - The language code
+
+Options:
+    --swiftfile [default: ${SRCROOT}/${TARGET_NAME}/Literals.swift] - The output Swift file directory.
+    --stringsfile [default: ${SRCROOT}/${TARGET_NAME}/Localizable.strings] - The output Strings file directory.
+```
 
 ## Authors & Collaborators
 

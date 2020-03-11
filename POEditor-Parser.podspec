@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "POEditor-Parser"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "`POEditor-Parser` generates a swift file with an input strings file from POEditor"
 
   s.description  = <<-DESC
