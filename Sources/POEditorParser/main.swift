@@ -5,7 +5,7 @@ import PerfectCURL
 
 let POEditorAPIURL = "https://api.poeditor.com/v2"
 
-let main = command(
+command(
     Argument<String>("APITOKEN", description: "The POEditor API token"),
     Argument<Int>("id", description: "The id of the project"),
     Argument<String>("language", description: "The language code"),
