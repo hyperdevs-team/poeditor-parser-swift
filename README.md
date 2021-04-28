@@ -40,13 +40,18 @@ Options:
 * **[Jorge Revuelta](https://github.com/minuscorp)**
 * **[Sebastián Varela](https://github.com/sebastianvarela)**
 
- 
 ## Android alternative
-If you want a similar solution for your Android projects, check this out: [poeditor-android-gradle-plugin](https://github.com/bq/poeditor-android-gradle-plugin)
+If you want a similar solution for your Android projects, check this out: [poeditor-android-gradle-plugin](https://github.com/hyperdevs-team/poeditor-android-gradle-plugin)
+
+## Acknowledgements
+The work in this repository up to April 28th, 2021 was done by [bq](https://github.com/bq).
+Thanks for all the work!!
 
 ## License 
 This project is licensed under the Apache Software License, Version 2.0.
 
+    Copyright (c) 2021 HyperDevs
+    
     Copyright (c) 2016 bq
 
     Licensed under the Apache License, Version 2.0 (the "License");
