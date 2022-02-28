@@ -156,17 +156,19 @@ enum SwiftCodeGeneratorConstants {
         return formatter
     }()
     
-    static let rootObjectHeader = """
-    // Generated using POEditorParser
-    // DO NOT EDIT
-    // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
-    
-    // swiftlint:disable all
+    static func rootObjectHeader(accessModifier: AccessModifier = .public) -> String {
+        """
+        // Generated using POEditorParser
+        // DO NOT EDIT
+        // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
+        
+        // swiftlint:disable all
 
-    import Foundation
-    
-    enum Literals {
-    """
+        import Foundation
+        
+        \(accessModifier.rawValue) enum Literals {
+        """
+    }
     static let rootObjectFooter = "\n}\n// swiftlint:enable all\n"
     
     static let methodOrVariableHeader = "\n"
@@ -181,7 +183,7 @@ class StringCodeGenerator: SwiftCodeGenerator {
     var generatedResult = ""
     
     func generateCode(translations: [Translation]) {
-        generatedResult += SwiftCodeGeneratorConstants.rootObjectHeader
+        generatedResult += SwiftCodeGeneratorConstants.rootObjectHeader()
         
         for t in translations {
             generatedResult += SwiftCodeGeneratorConstants.methodOrVariableHeader
@@ -195,13 +197,18 @@ class StringCodeGenerator: SwiftCodeGenerator {
 public class FileCodeGenerator: SwiftCodeGenerator {
     
     let fileHandle: FileHandle
-    public init(fileHandle: FileHandle) {
+    let accessModifier: AccessModifier
+    public init(
+        fileHandle: FileHandle,
+        access: String
+    ) {
         self.fileHandle = fileHandle
+        self.accessModifier = AccessModifier(accessString: access)
     }
     
     // TODO: Generalize!!! += (same code as in string)
     public func generateCode(translations: [Translation]) {
-        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader
+        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader()
         
         for t in translations {
             fileHandle += SwiftCodeGeneratorConstants.methodOrVariableHeader
@@ -361,6 +368,15 @@ enum TranslationValueParser {
         variables.sort(by: { $0.order < $1.order })
         let orderedVariables = variables.map{ $0.variable }
         return (localizedString, orderedVariables)
+    }
+}
+
+
+enum AccessModifier: String {
+    case `public`, `private`, `open`, `internal`
+    
+    init(accessString: String) {
+        self = AccessModifier(rawValue: accessString) ?? .public
     }
 }
 
