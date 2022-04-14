@@ -111,24 +111,24 @@ public struct Translation {
         return rawKey.capitalized.replacingOccurrences(of: "_", with: "")
     }
     
-    var swiftCode: String {
+    func swiftCode(accessModifier: AccessModifier = .public) -> String {
         if variables.isEmpty {
-            return generateVariableLessSwiftCode()
+            return generateVariableLessSwiftCode(accessModifier: accessModifier)
         } else {
-            return generateVariableSwiftCode()
+            return generateVariableSwiftCode(accessModifier: accessModifier)
         }
     }
     
-    private func generateVariableLessSwiftCode() -> String {
+    private func generateVariableLessSwiftCode(accessModifier: AccessModifier = .public) -> String {
         /*
          static var Welcome: String {
          return NSLocalizedString()
          }
          */
-        return "\tstatic var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", comment: \"\")\n\t}\n"
+        return "\t\(accessModifier.rawValue) static var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", comment: \"\")\n\t}\n"
     }
     
-    private func generateVariableSwiftCode() -> String {
+    private func generateVariableSwiftCode(accessModifier: AccessModifier = .public) -> String {
         /*
          static func ReadBooksKey(readNumber: Int) -> String {
          return ""
@@ -141,7 +141,7 @@ public struct Translation {
             .map { $0.parameterKey }
             .map { $0.snakeCased() }
             .joined(separator: ", ")
-        return "\tstatic func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", comment: \"\"), \(localizedArguments))\n\t}"
+        return "\t\(accessModifier.rawValue) static func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", comment: \"\"), \(localizedArguments))\n\t}"
     }
     
 }
@@ -208,11 +208,11 @@ public class FileCodeGenerator: SwiftCodeGenerator {
     
     // TODO: Generalize!!! += (same code as in string)
     public func generateCode(translations: [Translation]) {
-        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader()
+        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader(accessModifier: accessModifier)
         
         for t in translations {
             fileHandle += SwiftCodeGeneratorConstants.methodOrVariableHeader
-            fileHandle += t.swiftCode
+            fileHandle += t.swiftCode(accessModifier: accessModifier)
         }
         
         fileHandle += SwiftCodeGeneratorConstants.rootObjectFooter
