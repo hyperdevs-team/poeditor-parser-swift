@@ -11,8 +11,9 @@ command(
     Argument<String>("language", description: "The language code"),
     Option<String>("swiftfile", default: "${SRCROOT}/${TARGET_NAME}/Literals.swift", description: "The output Swift file directory."),
     Option<String>("stringsfile", default: "${SRCROOT}/${TARGET_NAME}/Localizable.strings", description: "The output Strings file directory."),
-    Option<String>("access", default: "public", description: "The access modifier.")
-) { (token: String, id: Int, language: String, swiftfile: String, stringsfile: String, access: String) in
+    Option<String>("access", default: "public", description: "The access modifier."),
+    Option<String>("bundle", default: "main", description: "The bundle modifier.")
+) { (token: String, id: Int, language: String, swiftfile: String, stringsfile: String, access: String, bundle: String) in
 
     print("Fetching contents of strings at POEditor...".blue)
     
@@ -61,7 +62,7 @@ command(
                 print("Fatal error: Couldn't write to file located at \(swiftfile)".red)
                 return
             }
-            let fileCodeGenerator = FileCodeGenerator(fileHandle: swiftHandle, access: access)
+            let fileCodeGenerator = FileCodeGenerator(fileHandle: swiftHandle, access: access, bundle: bundle)
             fileCodeGenerator.generateCode(translations: translations)
             print("Success! Literals generated at \(swiftfile)".green)
             

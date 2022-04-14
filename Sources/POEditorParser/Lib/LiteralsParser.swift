@@ -111,24 +111,30 @@ public struct Translation {
         return rawKey.capitalized.replacingOccurrences(of: "_", with: "")
     }
     
-    func swiftCode(accessModifier: AccessModifier = .public) -> String {
+    func swiftCode(accessModifier: AccessModifier = .public, bundleModifier: BundleModifier = .main) -> String {
         if variables.isEmpty {
-            return generateVariableLessSwiftCode(accessModifier: accessModifier)
+            return generateVariableLessSwiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         } else {
-            return generateVariableSwiftCode(accessModifier: accessModifier)
+            return generateVariableSwiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         }
     }
     
-    private func generateVariableLessSwiftCode(accessModifier: AccessModifier = .public) -> String {
+    private func generateVariableLessSwiftCode(
+        accessModifier: AccessModifier,
+        bundleModifier: BundleModifier
+    ) -> String {
         /*
          static var Welcome: String {
          return NSLocalizedString()
          }
          */
-        return "\t\(accessModifier.rawValue) static var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", comment: \"\")\n\t}\n"
+        return "\t\(accessModifier.rawValue) static var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", bundle: .\(bundleModifier.rawValue), comment: \"\")\n\t}\n"
     }
     
-    private func generateVariableSwiftCode(accessModifier: AccessModifier = .public) -> String {
+    private func generateVariableSwiftCode(
+        accessModifier: AccessModifier,
+        bundleModifier: BundleModifier
+    ) -> String {
         /*
          static func ReadBooksKey(readNumber: Int) -> String {
          return ""
@@ -141,7 +147,7 @@ public struct Translation {
             .map { $0.parameterKey }
             .map { $0.snakeCased() }
             .joined(separator: ", ")
-        return "\t\(accessModifier.rawValue) static func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", comment: \"\"), \(localizedArguments))\n\t}"
+        return "\t\(accessModifier.rawValue) static func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", bundle: .\(bundleModifier.rawValue), comment: \"\"), \(localizedArguments))\n\t}"
     }
     
 }
@@ -182,12 +188,15 @@ public class FileCodeGenerator: SwiftCodeGenerator {
     
     let fileHandle: FileHandle
     let accessModifier: AccessModifier
+    let bundleModifier: BundleModifier
     public init(
         fileHandle: FileHandle,
-        access: String
+        access: String,
+        bundle: String
     ) {
         self.fileHandle = fileHandle
-        self.accessModifier = AccessModifier(accessString: access)
+        self.accessModifier = .init(accessString: access)
+        self.bundleModifier = .init(bundleName: bundle)
     }
     
     // TODO: Generalize!!! += (same code as in string)
@@ -196,7 +205,7 @@ public class FileCodeGenerator: SwiftCodeGenerator {
         
         for t in translations {
             fileHandle += SwiftCodeGeneratorConstants.methodOrVariableHeader
-            fileHandle += t.swiftCode(accessModifier: accessModifier)
+            fileHandle += t.swiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         }
         
         fileHandle += SwiftCodeGeneratorConstants.rootObjectFooter
@@ -361,6 +370,15 @@ enum AccessModifier: String {
     
     init(accessString: String) {
         self = AccessModifier(rawValue: accessString) ?? .public
+    }
+}
+
+enum BundleModifier: String {
+    case main
+    case module
+    
+    init(bundleName: String) {
+        self = BundleModifier(rawValue: bundleName) ?? .main
     }
 }
 
