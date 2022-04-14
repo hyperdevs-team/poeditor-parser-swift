@@ -178,22 +178,6 @@ public protocol SwiftCodeGenerator {
     func generateCode(translations: [Translation])
 }
 
-class StringCodeGenerator: SwiftCodeGenerator {
-    
-    var generatedResult = ""
-    
-    func generateCode(translations: [Translation]) {
-        generatedResult += SwiftCodeGeneratorConstants.rootObjectHeader()
-        
-        for t in translations {
-            generatedResult += SwiftCodeGeneratorConstants.methodOrVariableHeader
-            generatedResult += t.swiftCode
-        }
-        
-        generatedResult += SwiftCodeGeneratorConstants.rootObjectFooter
-    }
-}
-
 public class FileCodeGenerator: SwiftCodeGenerator {
     
     let fileHandle: FileHandle
