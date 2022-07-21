@@ -140,10 +140,22 @@ public struct Translation {
          return ""
          }
          */
-        let parameters = variables
+        let uniqueKeyVariables: [Variable] = {
+            guard variables.count > 1 else {
+                return variables
+            }
+
+            return variables
+                .enumerated()
+                .map { (index, variable) in
+                    return .init(rawKey: variable.rawKey + "_\(index)")
+                }
+        }()
+
+        let parameters = uniqueKeyVariables
             .map { $0.type.swiftParameter(key: $0.parameterKey) }
             .joined(separator: ", ")
-        let localizedArguments = variables
+        let localizedArguments = uniqueKeyVariables
             .map { $0.parameterKey }
             .map { $0.snakeCased() }
             .joined(separator: ", ")
