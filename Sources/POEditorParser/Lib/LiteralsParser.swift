@@ -29,7 +29,7 @@ struct Variable {
          - alreadyReadPages <- this should not be captialized (or we'll lose the Read and Pages capital letters)
          */
         
-        let words = rawKey.split(separator: " ").map(String.init)
+        let words = rawKey.components(separatedBy: .alphanumerics.inverted)
         if words.count == 1 {
             return words[0].lowercaseFirst
         }
