@@ -31,6 +31,8 @@ Arguments:
 Options:
     --swiftfile [default: ${SRCROOT}/${TARGET_NAME}/Literals.swift] - The output Swift file directory.
     --stringsfile [default: ${SRCROOT}/${TARGET_NAME}/Localizable.strings] - The output Strings file directory.
+    --access [default: public] - The access modifier.
+    --bundle [default: main] - The bundle modifier. It can be only `main` or `module`.
 ```
 
 ## Authors & Collaborators

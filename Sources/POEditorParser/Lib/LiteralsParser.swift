@@ -29,7 +29,7 @@ struct Variable {
          - alreadyReadPages <- this should not be captialized (or we'll lose the Read and Pages capital letters)
          */
         
-        let words = rawKey.split(separator: " ").map(String.init)
+        let words = rawKey.components(separatedBy: .alphanumerics.inverted)
         if words.count == 1 {
             return words[0].lowercaseFirst
         }
@@ -111,37 +111,55 @@ public struct Translation {
         return rawKey.capitalized.replacingOccurrences(of: "_", with: "")
     }
     
-    var swiftCode: String {
+    func swiftCode(accessModifier: AccessModifier = .public, bundleModifier: BundleModifier = .main) -> String {
         if variables.isEmpty {
-            return generateVariableLessSwiftCode()
+            return generateVariableLessSwiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         } else {
-            return generateVariableSwiftCode()
+            return generateVariableSwiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         }
     }
     
-    private func generateVariableLessSwiftCode() -> String {
+    private func generateVariableLessSwiftCode(
+        accessModifier: AccessModifier,
+        bundleModifier: BundleModifier
+    ) -> String {
         /*
          static var Welcome: String {
          return NSLocalizedString()
          }
          */
-        return "\tstatic var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", comment: \"\")\n\t}\n"
+        return "\t\(accessModifier.rawValue) static var \(prettyKey): String {\n\t\treturn \(localizedStringFunction)(\"\(rawKey)\", bundle: .\(bundleModifier.rawValue), comment: \"\")\n\t}\n"
     }
     
-    private func generateVariableSwiftCode() -> String {
+    private func generateVariableSwiftCode(
+        accessModifier: AccessModifier,
+        bundleModifier: BundleModifier
+    ) -> String {
         /*
          static func ReadBooksKey(readNumber: Int) -> String {
          return ""
          }
          */
-        let parameters = variables
+        let uniqueKeyVariables: [Variable] = {
+            guard variables.count > 1 else {
+                return variables
+            }
+
+            return variables
+                .enumerated()
+                .map { (index, variable) in
+                    return .init(rawKey: variable.rawKey + "_\(index)")
+                }
+        }()
+
+        let parameters = uniqueKeyVariables
             .map { $0.type.swiftParameter(key: $0.parameterKey) }
             .joined(separator: ", ")
-        let localizedArguments = variables
+        let localizedArguments = uniqueKeyVariables
             .map { $0.parameterKey }
             .map { $0.snakeCased() }
             .joined(separator: ", ")
-        return "\tstatic func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", comment: \"\"), \(localizedArguments))\n\t}"
+        return "\t\(accessModifier.rawValue) static func \(prettyKey)(\(parameters)) -> String {\n\t\treturn String(format: \(localizedStringFunction)(\"\(rawKey)\", bundle: .\(bundleModifier.rawValue), comment: \"\"), \(localizedArguments))\n\t}"
     }
     
 }
@@ -156,17 +174,19 @@ enum SwiftCodeGeneratorConstants {
         return formatter
     }()
     
-    static let rootObjectHeader = """
-    // Generated using POEditorParser
-    // DO NOT EDIT
-    // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
-    
-    // swiftlint:disable all
+    static func rootObjectHeader(accessModifier: AccessModifier = .public) -> String {
+        """
+        // Generated using POEditorParser
+        // DO NOT EDIT
+        // Generated: \(SwiftCodeGeneratorConstants.dateFormatter.string(from: Date()))
+        
+        // swiftlint:disable all
 
-    import Foundation
-    
-    enum Literals {
-    """
+        import Foundation
+        
+        \(accessModifier.rawValue) enum Literals {
+        """
+    }
     static let rootObjectFooter = "\n}\n// swiftlint:enable all\n"
     
     static let methodOrVariableHeader = "\n"
@@ -176,36 +196,28 @@ public protocol SwiftCodeGenerator {
     func generateCode(translations: [Translation])
 }
 
-class StringCodeGenerator: SwiftCodeGenerator {
-    
-    var generatedResult = ""
-    
-    func generateCode(translations: [Translation]) {
-        generatedResult += SwiftCodeGeneratorConstants.rootObjectHeader
-        
-        for t in translations {
-            generatedResult += SwiftCodeGeneratorConstants.methodOrVariableHeader
-            generatedResult += t.swiftCode
-        }
-        
-        generatedResult += SwiftCodeGeneratorConstants.rootObjectFooter
-    }
-}
-
 public class FileCodeGenerator: SwiftCodeGenerator {
     
     let fileHandle: FileHandle
-    public init(fileHandle: FileHandle) {
+    let accessModifier: AccessModifier
+    let bundleModifier: BundleModifier
+    public init(
+        fileHandle: FileHandle,
+        access: String,
+        bundle: String
+    ) {
         self.fileHandle = fileHandle
+        self.accessModifier = .init(accessString: access)
+        self.bundleModifier = .init(bundleName: bundle)
     }
     
     // TODO: Generalize!!! += (same code as in string)
     public func generateCode(translations: [Translation]) {
-        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader
+        fileHandle += SwiftCodeGeneratorConstants.rootObjectHeader(accessModifier: accessModifier)
         
         for t in translations {
             fileHandle += SwiftCodeGeneratorConstants.methodOrVariableHeader
-            fileHandle += t.swiftCode
+            fileHandle += t.swiftCode(accessModifier: accessModifier, bundleModifier: bundleModifier)
         }
         
         fileHandle += SwiftCodeGeneratorConstants.rootObjectFooter
@@ -361,6 +373,24 @@ enum TranslationValueParser {
         variables.sort(by: { $0.order < $1.order })
         let orderedVariables = variables.map{ $0.variable }
         return (localizedString, orderedVariables)
+    }
+}
+
+
+enum AccessModifier: String {
+    case `public`, `private`, `open`, `internal`
+    
+    init(accessString: String) {
+        self = AccessModifier(rawValue: accessString) ?? .public
+    }
+}
+
+enum BundleModifier: String {
+    case main
+    case module
+    
+    init(bundleName: String) {
+        self = BundleModifier(rawValue: bundleName) ?? .main
     }
 }
 
