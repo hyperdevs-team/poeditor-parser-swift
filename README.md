@@ -41,6 +41,7 @@ Run poe help for more info
 * **[Raúl Pedraza León](https://github.com/r-pedraza)**
 * **[Jorge Revuelta](https://github.com/minuscorp)**
 * **[Sebastián Varela](https://github.com/sebastianvarela)**
+* **[David Martínez García](https://github.com/daviwiki)**
 
 ## License
 
