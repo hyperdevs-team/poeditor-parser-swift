@@ -91,33 +91,42 @@ public struct Translation: Comparable {
 
     private func generateFuncWithoutVariables() -> String {
         /*
-         static var Welcome: String {
-         return NSLocalizedString()
-         }
+         static let key: StringsUIKey = StringsUIKey(key: "key_id")
          */
-        "\tpublic static var \(prettyKey): String {\n\t\treturn NSLocalizedString(\"\(key)\", tableName: \(typeName).tableName, comment: \"\")\n\t}\n"
+        "\tstatic let \(prettyKey): \(typeName) = \(typeName)(key: \"\(key)\")"
     }
 
     private func generateFuncWithVariables() -> String {
         /*
-         static func ReadBooksKey(readNumber: Int) -> String {
-         return ""
+         static func key(parameter1: String) -> StringsUIKey {
+            .init(key: "key", parameters: ["parameter1": parameter1])
          }
          */
         let parameters = variables
             .map { $0.type.swiftParameter(key: $0.parameterKey) }
             .joined(separator: ", ")
+        
         let localizedArguments = variables
             .map { variable in
-                if variable.type != .textual {
-                    let value = "String(format: \"\(variable.type.localizedRepresentation)\", \(variable.parameterKey.snakeCased()))"
-                    return ".replacingOccurrences(of: \"{{\(variable.parameterKey)}}\", with: \(value))"
-                }
-
-                return ".replacingOccurrences(of: \"{{\(variable.parameterKey)}}\", with: \(variable.parameterKey.snakeCased()))"
+                (
+                    key: "\"\(variable.parameterKey)\"",
+                    value: variable.toParamterValue()
+                )
             }
-            .joined(separator: "\n\t\t\t")
-        return "\tpublic static func \(prettyKey)(\(parameters)) -> String {\n\t\treturn NSLocalizedString(\"\(key)\", tableName: \(typeName).tableName, comment: \"\")\n\t\t\t\(localizedArguments)\n\t}\n"
+            
+        var localizedArgumentsString: String {
+            var result: [String] = []
+            for (key, value) in localizedArguments {
+                result.append("\(key): \(value)")
+            }
+            return "[\(result.joined(separator: ", "))]"
+        }
+        
+        return """
+            static func \(prettyKey)(\(parameters)) -> \(typeName) {
+                .init(key: \"\(key)\", parameters: \(localizedArgumentsString))
+            }
+        """
     }
 
     public static func < (lhs: Translation, rhs: Translation) -> Bool {
@@ -126,5 +135,17 @@ public struct Translation: Comparable {
 
     public static func == (lhs: Translation, rhs: Translation) -> Bool {
         lhs.prettyKey == rhs.prettyKey
+    }
+}
+
+private extension Variable {
+    func toParamterValue() -> String {
+        switch type {
+        case .textual:
+            return parameterKey.snakeCased()
+        case .numeric:
+            let value = "String(format: \"\(type.localizedRepresentation)\", \(parameterKey.snakeCased()))"
+            return value
+        }
     }
 }
