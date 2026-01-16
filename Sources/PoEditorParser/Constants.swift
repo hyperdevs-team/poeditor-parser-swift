@@ -2,7 +2,7 @@ import Foundation
 
 enum POEConstants {
     static let fileHeader = """
-    // Generated using MM-POEditorParser (\(version))
+    // Generated using POEditorParser (\(version))
     // DO NOT EDIT
 
     // swiftlint:disable all
