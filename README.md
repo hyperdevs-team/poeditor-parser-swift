@@ -12,7 +12,7 @@ POEditor-Parser is available through [Mint](https://github.com/yonaskolb/Mint)
 
 To install it, simply add the following line to your `Mintfile`:
 ```ruby
-hyperdevs-team/poeditor-parser-swift@v2.0.3
+hyperdevs-team/poeditor-parser-swift@2.1.0
 ```
 
 ## Usage
