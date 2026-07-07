@@ -49,6 +49,6 @@ command(
     Option<OutputFormat>("outputformat", default: .struct, description: "The output format for swift file (enum or struct)"),
     Option<KeysFormat>("keysformat", default: .upperCamelCase, description: "The format for the localized key"),
     Option<TranslationFormat>("format", default: .strings, description: "The translation file format to download and generate (strings or xcstrings)"),
-    Option<Bool>("exportall", default: false, description: "Download all languages at once (POEditor options=[{\"export_all\": 1}])"),
+    Flag("exportall", default: false, description: "Download all languages at once (POEditor options=[{\"export_all\": 1}])"),
     processingClosure
 ).run()
