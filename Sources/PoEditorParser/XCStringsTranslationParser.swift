@@ -53,17 +53,23 @@ public class XCStringsTranslationParser: TranslationParser {
         // {optional-order-number{ name }}
         let pattern = "\\{[0-9]*\\{([^{}]+)\\}\\}"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return catalog }
-        let range = NSRange(catalog.startIndex..., in: catalog)
-        var result = catalog
-        // Reversed so replacements don't invalidate the ranges of earlier matches.
-        for match in regex.matches(in: catalog, range: range).reversed() {
-            guard
-                let nameRange = Range(match.range(at: 1), in: catalog),
-                let fullRange = Range(match.range, in: result)
-            else { continue }
-            let parameterKey = Variable(rawKey: String(catalog[nameRange])).parameterKey
-            result.replaceSubrange(fullRange, with: "{{\(parameterKey)}}")
+        let ns = catalog as NSString
+        let matches = regex.matches(in: catalog, range: NSRange(location: 0, length: ns.length))
+        guard !matches.isEmpty else { return catalog }
+
+        // Single forward pass: append the text between matches plus the rewritten
+        // variable. O(n) overall, versus the quadratic cost of per-match index
+        // conversions + replaceSubrange (which is what made --exportall slow).
+        var result = ""
+        result.reserveCapacity(ns.length)
+        var cursor = 0
+        for match in matches {
+            result += ns.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
+            let parameterKey = Variable(rawKey: ns.substring(with: match.range(at: 1))).parameterKey
+            result += "{{\(parameterKey)}}"
+            cursor = match.range.location + match.range.length
         }
+        result += ns.substring(from: cursor)
         return result
     }
 
