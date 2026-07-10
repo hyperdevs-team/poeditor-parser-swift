@@ -33,7 +33,7 @@ hyperdevs-team/poeditor-parser-swift@2.2.0
 * `--outputformat` [default: Struct] - The output format for swift file (enum or struct)
 * `--keysformat` [default: UpperCamelCase] - The format for the localized key
 * `--format` [default: strings] - The translation file format to download and generate (`strings` or `xcstrings`). With `xcstrings` the file at `--stringsfile` is written with a `.xcstrings` extension, containing the full downloaded String Catalog (all languages). The generated `.swift` file keeps the same format regardless of this option.
-* `--exportall` [default: false] - Download all languages at once (POEditor `options=[{"export_all": 1}]`). Does not have any effect when `--format` is `strings`.
+* `--exportall` [flag, default: off] - Download all languages at once (POEditor `options=[{"export_all": 1}]`). Pass it without a value (e.g. `--exportall`) to enable it; omit it to keep the default (single language). Combine it with `--format xcstrings` to get every language in a single `.xcstrings` file. Does not have any effect when `--format` is `strings`.
 
 Run poe help for more info
 
