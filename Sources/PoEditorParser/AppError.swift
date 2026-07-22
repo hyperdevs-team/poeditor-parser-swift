@@ -10,6 +10,7 @@ public enum AppError: Error, LocalizedError {
     case missingOptionApiToken
     case missingOptionProjectId
     case missingOptionProjectLanguage
+    case missingRequiredOption(option: String)
 
     public var errorDescription: String? {
         switch self {
@@ -32,13 +33,16 @@ public enum AppError: Error, LocalizedError {
             return "Could not connect to PoEditor API: Check Token or internet connection"
 
         case .missingOptionApiToken:
-            return "Missing API Token: If you set --onlygenerate to false you must pass --apitoken"
+            return "Missing API Token: the `download` command requires --apitoken"
 
         case .missingOptionProjectId:
-            return "Missing project Id: If you set --onlygenerate to false you must pass --projectid"
+            return "Missing project Id: the `download` command requires --projectid"
 
         case .missingOptionProjectLanguage:
-            return "Missing project language: If you set --onlygenerate to false you must pass --projectlanguage"
+            return "Missing project language: the `download` command requires --language"
+
+        case .missingRequiredOption(let option):
+            return "Missing required option: --\(option)"
         }
     }
 }

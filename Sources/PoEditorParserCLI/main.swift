@@ -5,50 +5,87 @@ import Rainbow
 
 let POEditorAPIURL = "https://api.poeditor.com/v2"
 
-private func processingClosure(
-    token: String?,
-    id: Int?,
-    language: String?,
-    onlyGenerate: Bool,
-    swiftFile: String,
-    stringsFile: String,
-    typeName: String,
-    tableName: String?,
-    outputFormat: OutputFormat,
-    keysFormat: KeysFormat,
-    format: TranslationFormat,
-    exportAll: Bool
-) throws {
-    let program = Program()
-    try program.run(
-        token: token,
-        id: id,
-        language: language,
-        onlyGenerate: onlyGenerate,
-        swiftFile: swiftFile,
-        stringsFile: stringsFile,
-        typeName: typeName,
-        tableName: tableName,
-        outputFormat: outputFormat,
-        keysFormat: keysFormat,
-        format: format,
-        exportAll: exportAll,
-        poEditorApiUrl: POEditorAPIURL
-    )
+let main = Group {
+    $0.command(
+        "download",
+        Option<String>("apitoken", default: "", description: "The POEditor API token"),
+        Option<Int>("projectid", default: 0, description: "The id of the project in POEditor"),
+        Option<String>("language", default: "en", description: "The preferred language code in POEditor"),
+        Option<String>("out", default: "Localizable.xcstrings", description: "Output .xcstrings file path"),
+        description: "Download a String Catalog (all languages) from POEditor."
+    ) { token, id, language, out in
+        try Program().download(
+            token: token,
+            id: id,
+            language: language,
+            out: out,
+            poEditorApiUrl: POEditorAPIURL
+        )
+    }
+
+    $0.command(
+        "generate",
+        Option<String>("in", default: "Localizable.xcstrings", description: "Input .xcstrings file path"),
+        Option<String>("swiftfile", default: "Sources/Literals.swift", description: "Output Swift file path"),
+        Option<String>("typename", default: "Literals", description: "Type name that stores all localized vars"),
+        Option<String?>("tablename", default: nil, description: "The tableName value for NSLocalizedString"),
+        Option<OutputFormat>("outputformat", default: .struct, description: "Swift output format (enum or struct)"),
+        Option<KeysFormat>("keysformat", default: .upperCamelCase, description: "The format for the localized key"),
+        Option<String?>("language", default: nil, description: "Preferred language to source values from"),
+        description: "Generate the Swift literals file from a local .xcstrings."
+    ) { input, swiftFile, typeName, tableName, outputFormat, keysFormat, language in
+        try Program().generate(
+            input: input,
+            swiftFile: swiftFile,
+            typeName: typeName,
+            tableName: tableName,
+            outputFormat: outputFormat,
+            keysFormat: keysFormat,
+            language: language
+        )
+    }
+
+    $0.command(
+        "distribute",
+        Option<String>("in", default: "Localizable.xcstrings", description: "Input multi-brand .xcstrings file path"),
+        Option<String>("out", default: "Localizable.xcstrings", description: "Output single-brand .xcstrings file path"),
+        Option<String>("brand", default: "", description: "The brand to extract (key[brand] suffix)"),
+        description: "Split a multi-brand .xcstrings into a single-brand one."
+    ) { input, out, brand in
+        try Program().distribute(input: input, out: out, brand: brand)
+    }
+
+    $0.command(
+        "filter",
+        Option<String>("baseline", default: "", description: "Baseline .xcstrings (e.g. HEAD contents)"),
+        Option<String>("working", default: "", description: "Working-tree .xcstrings"),
+        Option<String>("out", default: "", description: "Output .xcstrings file path (defaults to --working)"),
+        Option<String>("keys", default: "", description: "Comma-separated key patterns (* and ? wildcards)"),
+        description: "Keep only matching-key changes between baseline and working; rest falls back to baseline."
+    ) { baseline, working, out, keys in
+        try Program().filter(
+            baseline: baseline,
+            working: working,
+            out: out.isEmpty ? working : out,
+            keys: keys.split(separator: ",").map(String.init)
+        )
+    }
+
+    $0.command(
+        "remove",
+        Option<String>("in", default: "Localizable.xcstrings", description: "Input .xcstrings file path"),
+        Option<String>("out", default: "", description: "Output .xcstrings file path (defaults to --in)"),
+        Option<String>("keys", default: "", description: "Comma-separated key patterns (* and ? wildcards)"),
+        Flag("dryrun", default: false, description: "Only print the keys that would be removed"),
+        description: "Remove every key matching the given patterns."
+    ) { input, out, keys, dryRun in
+        try Program().remove(
+            input: input,
+            out: out.isEmpty ? input : out,
+            keys: keys.split(separator: ",").map(String.init),
+            dryRun: dryRun
+        )
+    }
 }
 
-command(
-    Option<String?>("apitoken", default: nil, description: "The POEditor API token"),
-    Option<Int?>("projectid", default: nil, description: "The id of the project in POEditor"),
-    Option<String?>("projectlanguage", default: nil, description: "The language code in POEditor"),
-    Option<Bool>("onlygenerate", default: false, description: ""),
-    Option<String>("swiftfile", default: "Sources/Literals.swift", description: "The output Swift file directory."),
-    Option<String>("stringsfile", default: "Sources/Localizable.strings", description: "The output Strings file directory."),
-    Option<String>("typename", default: "Literals", description: "The type name that store all localized vars"),
-    Option<String?>("tablename", default: nil, description: "The tableName value for NSLocalizedString"),
-    Option<OutputFormat>("outputformat", default: .struct, description: "The output format for swift file (enum or struct)"),
-    Option<KeysFormat>("keysformat", default: .upperCamelCase, description: "The format for the localized key"),
-    Option<TranslationFormat>("format", default: .strings, description: "The translation file format to download and generate (strings or xcstrings)"),
-    Flag("exportall", default: false, description: "Download all languages at once (POEditor options=[{\"export_all\": 1}])"),
-    processingClosure
-).run()
+main.run()
