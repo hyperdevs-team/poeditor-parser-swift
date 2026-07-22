@@ -1,12 +1,14 @@
 import Foundation
 
-protocol CodeKeeper<Handle> {
+/// A sink the code generators append generated Swift to, then materialize with
+/// `build()` into its backing handle (an in-memory `String` or a `FileHandle`).
+protocol CodeWriter<Handle> {
     associatedtype Handle
     func append(_ content: String)
     func build() -> Handle
 }
 
-class StringKeeper: CodeKeeper {
+class StringCodeWriter: CodeWriter {
     typealias Handle = String
     private var contents: [String] = []
 
@@ -19,7 +21,7 @@ class StringKeeper: CodeKeeper {
     }
 }
 
-class FileHandleKeeper: CodeKeeper {
+class FileCodeWriter: CodeWriter {
     typealias Handle = FileHandle
     private let handle: FileHandle
 

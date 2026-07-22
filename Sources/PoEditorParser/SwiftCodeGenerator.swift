@@ -5,18 +5,18 @@ public protocol SwiftCodeGenerator {
 }
 
 class StructCodeGenerator: SwiftCodeGenerator {
-    let keeper: any CodeKeeper
+    let writer: any CodeWriter
     let typeName: String
     let tableName: String?
     let outputFormat: OutputFormat
 
     init(
-        keeper: any CodeKeeper,
+        writer: any CodeWriter,
         typeName: String,
         tableName: String?,
         outputFormat: OutputFormat
     ) {
-        self.keeper = keeper
+        self.writer = writer
         self.typeName = typeName
         self.tableName = tableName
         self.outputFormat = outputFormat
@@ -24,11 +24,11 @@ class StructCodeGenerator: SwiftCodeGenerator {
 
     func generateCode(translations: [Translation]) {
         // File Header
-        keeper.append(POEConstants.fileHeader)
-        keeper.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.fileHeader)
+        writer.append(POEConstants.methodOrVariableSeparator)
 
         // File contents
-        keeper.append(
+        writer.append(
             """
         public struct \(typeName): Hashable, Equatable {
             public let key: String
@@ -58,39 +58,39 @@ class StructCodeGenerator: SwiftCodeGenerator {
         """
         )
 
-        keeper.append(POEConstants.methodOrVariableSeparator)
-        keeper.append(POEConstants.methodOrVariableSeparator)
-        keeper.append("public extension \(typeName) {")
-        keeper.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.methodOrVariableSeparator)
+        writer.append("public extension \(typeName) {")
+        writer.append(POEConstants.methodOrVariableSeparator)
 
         for (index, translation) in translations.enumerated() {
-            keeper.append(translation.swiftStaticFuncCode)
+            writer.append(translation.swiftStaticFuncCode)
             if index < translations.count - 1 {
-                keeper.append(POEConstants.methodOrVariableSeparator)
+                writer.append(POEConstants.methodOrVariableSeparator)
             }
         }
 
-        keeper.append(POEConstants.methodOrVariableSeparator)
-        keeper.append("}") // Close extension
+        writer.append(POEConstants.methodOrVariableSeparator)
+        writer.append("}") // Close extension
 
         // File close
-        keeper.append(POEConstants.fileFooter)
+        writer.append(POEConstants.fileFooter)
     }
 }
 
 class EnumCodeGenerator: SwiftCodeGenerator {
-    let keeper: any CodeKeeper
+    let writer: any CodeWriter
     let typeName: String
     let tableName: String?
     let outputFormat: OutputFormat
 
     init(
-        keeper: any CodeKeeper,
+        writer: any CodeWriter,
         typeName: String,
         tableName: String?,
         outputFormat: OutputFormat
     ) {
-        self.keeper = keeper
+        self.writer = writer
         self.typeName = typeName
         self.tableName = tableName
         self.outputFormat = outputFormat
@@ -98,50 +98,50 @@ class EnumCodeGenerator: SwiftCodeGenerator {
 
     func generateCode(translations: [Translation]) {
         // File Header
-        keeper.append(POEConstants.fileHeader)
+        writer.append(POEConstants.fileHeader)
 
         // File contents
-        keeper.append(POEConstants.literalsEnumHeader(keysName: typeName))
+        writer.append(POEConstants.literalsEnumHeader(keysName: typeName))
         for (index, translation) in translations.enumerated() {
-            keeper.append(translation.swiftEnumCaseCode)
+            writer.append(translation.swiftEnumCaseCode)
             if index < translations.count - 1 {
-                keeper.append(POEConstants.methodOrVariableSeparator)
+                writer.append(POEConstants.methodOrVariableSeparator)
             }
         }
-        keeper.append(POEConstants.methodOrVariableSeparator)
-        keeper.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.methodOrVariableSeparator)
 
-        keeper.append(POEConstants.literalsEnumValueFuncStart)
+        writer.append(POEConstants.literalsEnumValueFuncStart)
         for translation in translations {
-            keeper.append(translation.swiftEnumCaseForValue)
-            keeper.append(POEConstants.methodOrVariableSeparator)
+            writer.append(translation.swiftEnumCaseForValue)
+            writer.append(POEConstants.methodOrVariableSeparator)
         }
         if translations.count > 1_000 {
-            keeper.append(POEConstants.literalsEnumDefaultCase)
+            writer.append(POEConstants.literalsEnumDefaultCase)
         }
-        keeper.append(POEConstants.literalsEnumValueFuncEnd)
+        writer.append(POEConstants.literalsEnumValueFuncEnd)
 
-        keeper.append(POEConstants.methodOrVariableSeparator)
+        writer.append(POEConstants.methodOrVariableSeparator)
 
-        keeper.append(POEConstants.literalsEnumStringKeyStart)
+        writer.append(POEConstants.literalsEnumStringKeyStart)
         for translation in translations {
-            keeper.append(translation.swiftEnumCaseForKey)
-            keeper.append(POEConstants.methodOrVariableSeparator)
+            writer.append(translation.swiftEnumCaseForKey)
+            writer.append(POEConstants.methodOrVariableSeparator)
         }
         if translations.count > 1_000 {
-            keeper.append(POEConstants.literalsEnumDefaultCase)
+            writer.append(POEConstants.literalsEnumDefaultCase)
         }
-        keeper.append(POEConstants.literalsEnumStringKeyEnd)
+        writer.append(POEConstants.literalsEnumStringKeyEnd)
 
-        keeper.append(POEConstants.literalsEnumFooter)
+        writer.append(POEConstants.literalsEnumFooter)
 
-        // Filoe close
-        keeper.append(POEConstants.fileFooter)
+        // File close
+        writer.append(POEConstants.fileFooter)
     }
 }
 
 public class StringCodeGenerator: SwiftCodeGenerator {
-    let keeper: any CodeKeeper
+    let writer: any CodeWriter
     let typeName: String
     let tableName: String?
     let outputFormat: OutputFormat
@@ -150,7 +150,7 @@ public class StringCodeGenerator: SwiftCodeGenerator {
         switch outputFormat {
         case .struct:
             return StructCodeGenerator(
-                keeper: keeper,
+                writer: writer,
                 typeName: typeName,
                 tableName: tableName,
                 outputFormat: outputFormat
@@ -158,7 +158,7 @@ public class StringCodeGenerator: SwiftCodeGenerator {
 
         case .enum:
             return EnumCodeGenerator(
-                keeper: keeper,
+                writer: writer,
                 typeName: typeName,
                 tableName: tableName,
                 outputFormat: outputFormat
@@ -171,7 +171,7 @@ public class StringCodeGenerator: SwiftCodeGenerator {
         tableName: String?,
         outputFormat: OutputFormat
     ) {
-        keeper = StringKeeper()
+        writer = StringCodeWriter()
         self.typeName = typeName
         self.tableName = tableName
         self.outputFormat = outputFormat
@@ -183,7 +183,7 @@ public class StringCodeGenerator: SwiftCodeGenerator {
 }
 
 public class FileCodeGenerator: SwiftCodeGenerator {
-    let keeper: any CodeKeeper
+    let writer: any CodeWriter
     let typeName: String
     let tableName: String?
     let outputFormat: OutputFormat
@@ -192,7 +192,7 @@ public class FileCodeGenerator: SwiftCodeGenerator {
         switch outputFormat {
         case .struct:
             return StructCodeGenerator(
-                keeper: keeper,
+                writer: writer,
                 typeName: typeName,
                 tableName: tableName,
                 outputFormat: outputFormat
@@ -200,7 +200,7 @@ public class FileCodeGenerator: SwiftCodeGenerator {
 
         case .enum:
             return EnumCodeGenerator(
-                keeper: keeper,
+                writer: writer,
                 typeName: typeName,
                 tableName: tableName,
                 outputFormat: outputFormat
@@ -214,7 +214,7 @@ public class FileCodeGenerator: SwiftCodeGenerator {
         tableName: String?,
         outputFormat: OutputFormat
     ) {
-        keeper = FileHandleKeeper(handle: fileHandle)
+        writer = FileCodeWriter(handle: fileHandle)
         self.typeName = typeName
         self.tableName = tableName
         self.outputFormat = outputFormat
