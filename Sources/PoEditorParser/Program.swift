@@ -16,13 +16,23 @@ public class Program {
         tableName: String?,
         outputFormat: OutputFormat,
         keysFormat: KeysFormat,
+        format: TranslationFormat,
+        exportAll: Bool,
         poEditorApiUrl: String
     ) throws {
         do {
+            // For xcstrings the translations file lives at a `.xcstrings` path
+            // (defaulting to the stringsFile path with the extension swapped).
+            let translationsFile = format == .xcstrings
+                ? (stringsFile as NSString).deletingPathExtension + ".xcstrings"
+                : stringsFile
+
             print("🚀  Starting PoEditor Parser v\(POEConstants.version)".blue)
             print("-  Only Generate: \(onlyGenerate)".white)
+            print("-  Translation format: \(format)".white)
+            print("-  Export all languages: \(exportAll)".white)
             print("-  Generating Swift: \(swiftFile)".white)
-            print("-  Generating .strings: \(stringsFile)".white)
+            print("-  Generating translations: \(translationsFile)".white)
             print("-  Type name: \(typeName)".white)
             print("-  Table name: \(tableName ?? "NOT SET")".white)
             print("-  Output format: \(outputFormat)".white)
@@ -38,11 +48,17 @@ public class Program {
                 print("🔄 Querying POEditor for the latest strings file...".magenta)
                 var request = URLRequest(url: URL(string: "\(poEditorApiUrl)/projects/export")!)
                 request.httpMethod = "POST"
-                let parameters = ""
+                var parameters = ""
                     + "api_token=\(token)&"
                     + "id=\(id)&"
                     + "language=\(language)&"
-                    + "type=apple_strings"
+                    + "type=\(format.apiType)"
+
+                if exportAll {
+                    let options = "[{\"export_all\": 1}]"
+                        .addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+                    parameters += "&options=\(options)"
+                }
                 request.httpBody = parameters.data(using: .utf8)
                 let data = try URLSession.shared.syncDataTask(with: request)
                 guard
@@ -66,21 +82,31 @@ public class Program {
                 translationStringContent = translationString
             } else {
                 print("✅ Fetching content from passed strings path".green)
-                print("ℹ️ Reading content from: \(stringsFile)".green)
-                guard let data = FileManager.default.contents(atPath: stringsFile) else {
-                    throw AppError.fileNotFound(file: stringsFile)
+                print("ℹ️ Reading content from: \(translationsFile)".green)
+                guard let data = FileManager.default.contents(atPath: translationsFile) else {
+                    throw AppError.fileNotFound(file: translationsFile)
                 }
                 guard let content = String(data: data, encoding: .utf8) else {
-                    throw AppError.fileOpenError(file: stringsFile)
+                    throw AppError.fileOpenError(file: translationsFile)
                 }
 
                 translationStringContent = content
             }
 
-            print("ℹ️ Parsing strings file...".blue)
-            let parser = StringTranslationParser(typeName: typeName,
+            print("ℹ️ Parsing translations file...".blue)
+            let parser: TranslationParser
+            switch format {
+            case .strings:
+                parser = StringTranslationParser(typeName: typeName,
                                                  translation: translationStringContent,
                                                  keysFormat: keysFormat)
+
+            case .xcstrings:
+                parser = XCStringsTranslationParser(typeName: typeName,
+                                                    translation: translationStringContent,
+                                                    keysFormat: keysFormat,
+                                                    preferredLanguage: language)
+            }
             let translations = try parser.parse().sorted()
 
             FileManager.default.createFile(atPath: swiftFile, contents: nil, attributes: nil)
@@ -94,13 +120,23 @@ public class Program {
             fileCodeGenerator.generateCode(translations: translations)
             print("✅ Success! Literals generated at \(swiftFile)".green)
 
-            FileManager.default.createFile(atPath: stringsFile, contents: nil, attributes: nil)
-            guard let stringsHandle = FileHandle(forWritingAtPath: stringsFile) else {
-                throw AppError.writeFileError(file: stringsFile)
+            switch format {
+            case .strings:
+                FileManager.default.createFile(atPath: translationsFile, contents: nil, attributes: nil)
+                guard let stringsHandle = FileHandle(forWritingAtPath: translationsFile) else {
+                    throw AppError.writeFileError(file: translationsFile)
+                }
+                let stringsFileGenerator = StringsFileGenerator(fileHandle: stringsHandle)
+                stringsFileGenerator.generateCode(translations: translations)
+                print("✅ Success! Strings generated at \(translationsFile)".green)
+
+            case .xcstrings:
+                if !onlyGenerate {
+                    let normalized = XCStringsTranslationParser.normalizingPlaceholders(in: translationStringContent)
+                    try normalized.write(toFile: translationsFile, atomically: true, encoding: .utf8)
+                }
+                print("✅ Success! String catalog written at \(translationsFile)".green)
             }
-            let stringsFileGenerator = StringsFileGenerator(fileHandle: stringsHandle)
-            stringsFileGenerator.generateCode(translations: translations)
-            print("✅ Success! Strings generated at \(stringsFile)".green)
         } catch let error {
             print("❌ [ERROR] \(error.localizedDescription)".red)
             throw error

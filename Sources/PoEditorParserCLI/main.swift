@@ -15,7 +15,9 @@ private func processingClosure(
     typeName: String,
     tableName: String?,
     outputFormat: OutputFormat,
-    keysFormat: KeysFormat
+    keysFormat: KeysFormat,
+    format: TranslationFormat,
+    exportAll: Bool
 ) throws {
     let program = Program()
     try program.run(
@@ -29,6 +31,8 @@ private func processingClosure(
         tableName: tableName,
         outputFormat: outputFormat,
         keysFormat: keysFormat,
+        format: format,
+        exportAll: exportAll,
         poEditorApiUrl: POEditorAPIURL
     )
 }
@@ -44,5 +48,7 @@ command(
     Option<String?>("tablename", default: nil, description: "The tableName value for NSLocalizedString"),
     Option<OutputFormat>("outputformat", default: .struct, description: "The output format for swift file (enum or struct)"),
     Option<KeysFormat>("keysformat", default: .upperCamelCase, description: "The format for the localized key"),
+    Option<TranslationFormat>("format", default: .strings, description: "The translation file format to download and generate (strings or xcstrings)"),
+    Flag("exportall", default: false, description: "Download all languages at once (POEditor options=[{\"export_all\": 1}])"),
     processingClosure
 ).run()

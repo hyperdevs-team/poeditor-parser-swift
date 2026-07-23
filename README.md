@@ -12,7 +12,7 @@ POEditor-Parser is available through [Mint](https://github.com/yonaskolb/Mint)
 
 To install it, simply add the following line to your `Mintfile`:
 ```ruby
-hyperdevs-team/poeditor-parser-swift@2.1.0
+hyperdevs-team/poeditor-parser-swift@2.2.0
 ```
 
 ## Usage
@@ -32,6 +32,8 @@ hyperdevs-team/poeditor-parser-swift@2.1.0
 * `--tablename` - The tableName value for NSLocalizedString
 * `--outputformat` [default: Struct] - The output format for swift file (enum or struct)
 * `--keysformat` [default: UpperCamelCase] - The format for the localized key
+* `--format` [default: strings] - The translation file format to download and generate (`strings` or `xcstrings`). With `xcstrings` the file at `--stringsfile` is written with a `.xcstrings` extension, containing the full downloaded String Catalog (all languages). The generated `.swift` file keeps the same format regardless of this option.
+* `--exportall` [flag, default: off] - Download all languages at once (POEditor `options=[{"export_all": 1}]`). Pass it without a value (e.g. `--exportall`) to enable it; omit it to keep the default (single language). Combine it with `--format xcstrings` to get every language in a single `.xcstrings` file. Does not have any effect when `--format` is `strings`.
 
 Run poe help for more info
 
@@ -42,6 +44,7 @@ Run poe help for more info
 * **[Jorge Revuelta](https://github.com/minuscorp)**
 * **[Sebastián Varela](https://github.com/sebastianvarela)**
 * **[David Martínez García](https://github.com/daviwiki)**
+* **[Adrián Ruiz Lafuente](https://github.com/adrianrl)**
 
 ## License
 
