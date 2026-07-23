@@ -46,9 +46,9 @@ public class XCStringsTranslationParser: TranslationParser {
 
     /// Converts placeholder-marked variables like `{1{variable}}` (used by other
     /// platforms that share this POEditor project) into the plain `{{variable}}`
-    /// format iOS expects, mirroring what `TranslationValueParser` does for the
-    /// `.strings` output. Runs over the whole catalog so every language is
-    /// normalized in a single pass, without re-serializing the JSON.
+    /// format this tool's generated `enum` expects. Runs over the whole catalog
+    /// so every language is normalized in a single pass, without re-serializing
+    /// the JSON.
     public static func normalizingPlaceholders(in catalog: String) -> String {
         // {optional-order-number{ name }}
         let pattern = "\\{[0-9]*\\{([^{}]+)\\}\\}"
