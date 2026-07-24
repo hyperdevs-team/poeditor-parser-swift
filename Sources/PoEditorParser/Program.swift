@@ -110,14 +110,14 @@ public class Program {
         }
     }
 
-    /// Split a multi-brand `.xcstrings` into a single-brand one.
-    public func distribute(input: String, out: String, brand: String) throws {
+    /// Split a multi-variant `.xcstrings` into a single-variant one.
+    public func distribute(input: String, out: String, variant: String) throws {
         do {
-            guard !brand.isEmpty else { throw AppError.missingRequiredOption(option: "brand") }
+            guard !variant.isEmpty else { throw AppError.missingRequiredOption(option: "variant") }
             let source = try StringCatalog(contentsOfFile: input)
-            let result = source.distributed(toSuffix: brand)
+            let result = source.distributed(toSuffix: variant)
             try result.write(toFile: out)
-            print("✅ Distributed \(brand): \(result.strings.count) keys → \(out)".green)
+            print("✅ Distributed \(variant): \(result.strings.count) keys → \(out)".green)
         } catch let error {
             print("❌ [ERROR] \(error.localizedDescription)".red)
             throw error

@@ -47,12 +47,12 @@ let main = Group {
 
     $0.command(
         "distribute",
-        Option<String>("in", default: "Localizable.xcstrings", description: "Input multi-brand .xcstrings file path"),
-        Option<String>("out", default: "Localizable.xcstrings", description: "Output single-brand .xcstrings file path"),
-        Option<String>("brand", default: "", description: "The brand to extract (key[brand] suffix)"),
-        description: "Split a multi-brand .xcstrings into a single-brand one."
-    ) { input, out, brand in
-        try Program().distribute(input: input, out: out, brand: brand)
+        Option<String>("in", default: "Localizable.xcstrings", description: "Input multi-variant .xcstrings file path"),
+        Option<String>("out", default: "Localizable.xcstrings", description: "Output single-variant .xcstrings file path"),
+        Option<String>("variant", default: "", description: "The variant to extract (key[variant] suffix)"),
+        description: "Split a multi-variant .xcstrings into a single-variant one."
+    ) { input, out, variant in
+        try Program().distribute(input: input, out: out, variant: variant)
     }
 
     $0.command(

@@ -32,7 +32,7 @@ func matcherWildcards() {
 // MARK: - distribute
 
 @Test
-func distributeBrandSpecificWinsOverCommon() {
+func distributeVariantSpecificWinsOverCommon() {
     let source = catalog([
         "title": "común",
         "title[yoigo]": "yoigo",
@@ -41,14 +41,14 @@ func distributeBrandSpecificWinsOverCommon() {
         "other[jazztel]": "jazztel"
     ])
     let yoigo = values(source.distributed(toSuffix: "yoigo"))
-    #expect(yoigo["title"] == "yoigo")          // brand-specific wins
+    #expect(yoigo["title"] == "yoigo")          // variant-specific wins
     #expect(yoigo["only_common"] == "común")    // common kept
-    #expect(yoigo["other"] == nil)              // other brand dropped
+    #expect(yoigo["other"] == nil)              // other variant dropped
     #expect(yoigo.count == 2)
 }
 
 @Test
-func distributeCommonKeptWhenNoBrandSpecific() {
+func distributeCommonKeptWhenNoVariantSpecific() {
     let source = catalog(["title": "común", "title[masmovil]": "mm"])
     let yoigo = values(source.distributed(toSuffix: "yoigo"))
     #expect(yoigo["title"] == "común")
@@ -56,7 +56,7 @@ func distributeCommonKeptWhenNoBrandSpecific() {
 }
 
 @Test
-func distributeMultiBrandSuffix() {
+func distributeMultiVariantSuffix() {
     let source = catalog(["greeting[yoigo|guuk]": "hola"])
     #expect(values(source.distributed(toSuffix: "guuk"))["greeting"] == "hola")
     #expect(values(source.distributed(toSuffix: "lebara")).isEmpty)

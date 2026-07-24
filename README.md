@@ -57,17 +57,17 @@ poe generate --in Localizable.xcstrings --swiftfile Sources/Literals.swift --out
 | `--language` | – | Preferred language to source values from |
 
 ### `distribute`
-Split a multi-brand `.xcstrings` into a single-brand one. Keys may carry a suffix `key[brandA|brandB]`; a brand-specific key wins over the plain (common) key of the same base name, and keys targeting other brands are dropped.
+Split a multi-variant `.xcstrings` into a single-variant one. Keys may carry a suffix `key[variantA|variantB]`; a variant-specific key wins over the plain (common) key of the same base name, and keys targeting other variants are dropped.
 
 ```
-poe distribute --in Localizable.xcstrings --out Brands/Yoigo/Localizable.xcstrings --brand yoigo
+poe distribute --in Localizable.xcstrings --out Variants/Yoigo/Localizable.xcstrings --variant yoigo
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--in` | `Localizable.xcstrings` | Input multi-brand `.xcstrings` file path |
-| `--out` | `Localizable.xcstrings` | Output single-brand `.xcstrings` file path |
-| `--brand` | – | The brand to extract (`key[brand]` suffix) |
+| `--in` | `Localizable.xcstrings` | Input multi-variant `.xcstrings` file path |
+| `--out` | `Localizable.xcstrings` | Output single-variant `.xcstrings` file path |
+| `--variant` | – | The variant to extract (`key[variant]` suffix) |
 
 ### `filter`
 Keep only the changes of keys matching `--keys` between a baseline and a working `.xcstrings`; every other key falls back to the baseline. The command is git-agnostic: provide the baseline (e.g. the `HEAD` contents) as a file.

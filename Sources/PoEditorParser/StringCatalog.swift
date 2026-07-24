@@ -3,7 +3,7 @@ import Foundation
 /// In-memory model of an Apple String Catalog (`.xcstrings`) file.
 ///
 /// This is the single source of truth for reading and writing `.xcstrings`.
-/// Every operation that manipulates a catalog (parse, distribute per brand,
+/// Every operation that manipulates a catalog (parse, distribute per variant,
 /// filter, remove keys, generate Swift) works on this type instead of poking
 /// at raw JSON, so the on-disk format is defined in exactly one place.
 public struct StringCatalog: Equatable {
