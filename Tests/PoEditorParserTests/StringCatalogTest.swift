@@ -27,6 +27,7 @@ private let sampleCatalog = """
     },
     "with_comment" : {
       "comment" : "A greeting",
+      "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {

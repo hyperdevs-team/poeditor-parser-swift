@@ -55,7 +55,8 @@ public class Program {
             print("✅ Downloaded the latest strings file from POEditor!".green)
 
             let normalized = XCStringsTranslationParser.normalizingPlaceholders(in: downloaded)
-            try normalized.write(toFile: out, atomically: true, encoding: .utf8)
+            let marked = XCStringsTranslationParser.markingManualExtractionState(in: normalized)
+            try marked.write(toFile: out, atomically: true, encoding: .utf8)
             print("✅ Success! String catalog written at \(out)".green)
         } catch let error {
             print("❌ [ERROR] \(error.localizedDescription)".red)
