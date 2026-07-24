@@ -5,108 +5,93 @@ import Rainbow
 public class Program {
     public init() {}
 
-    public func run(
-        token: String?,
-        id: Int?,
-        language: String?,
-        onlyGenerate: Bool,
+    /// Download a String Catalog (`.xcstrings`) from POEditor and write it to
+    /// `out`, normalizing placeholders (`{1{var}}` -> `{{var}}`) in a single
+    /// pass. All languages are always exported: a `.xcstrings` is inherently
+    /// multi-language.
+    public func download(
+        token: String,
+        id: Int,
+        language: String,
+        out: String,
+        poEditorApiUrl: String
+    ) throws {
+        do {
+            guard !token.isEmpty else { throw AppError.missingOptionApiToken }
+            guard id != 0 else { throw AppError.missingOptionProjectId }
+
+            print("🚀  Starting PoEditor Parser v\(POEConstants.version)".blue)
+            print("-  Downloading translations: \(out)".white)
+
+            print("🔄 Querying POEditor for the latest strings file...".magenta)
+            var request = URLRequest(url: URL(string: "\(poEditorApiUrl)/projects/export")!)
+            request.httpMethod = "POST"
+            let options = "[{\"export_all\": 1}]"
+                .addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+            let parameters = ""
+                + "api_token=\(token)&"
+                + "id=\(id)&"
+                + "language=\(language)&"
+                + "type=xcstrings&"
+                + "options=\(options)"
+            request.httpBody = parameters.data(using: .utf8)
+
+            let data = try URLSession.shared.syncDataTask(with: request)
+            guard
+                let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                let result = json["result"] as? [String: Any],
+                let urlString = result["url"] as? String,
+                let url = URL(string: urlString)
+            else {
+                throw AppError.apiConnectError
+            }
+            print("✅ Got the latest URL for the strings file from POEditor".green)
+
+            print("🔄 Downloading the latest strings file from POEditor...".magenta)
+            let downloadData = try URLSession.shared.syncDataTask(with: URLRequest(url: url))
+            guard let downloaded = String(data: downloadData, encoding: .utf8) else {
+                throw AppError.apiDownloadTermsError
+            }
+            print("✅ Downloaded the latest strings file from POEditor!".green)
+
+            let normalized = XCStringsTranslationParser.normalizingPlaceholders(in: downloaded)
+            try normalized.write(toFile: out, atomically: true, encoding: .utf8)
+            print("✅ Success! String catalog written at \(out)".green)
+        } catch let error {
+            print("❌ [ERROR] \(error.localizedDescription)".red)
+            throw error
+        }
+    }
+
+    /// Generate the Swift literals file from a local `.xcstrings`.
+    public func generate(
+        input: String,
         swiftFile: String,
-        stringsFile: String,
         typeName: String,
         tableName: String?,
         outputFormat: OutputFormat,
         keysFormat: KeysFormat,
-        format: TranslationFormat,
-        exportAll: Bool,
-        poEditorApiUrl: String
+        language: String?
     ) throws {
         do {
-            // For xcstrings the translations file lives at a `.xcstrings` path
-            // (defaulting to the stringsFile path with the extension swapped).
-            let translationsFile = format == .xcstrings
-                ? (stringsFile as NSString).deletingPathExtension + ".xcstrings"
-                : stringsFile
-
             print("🚀  Starting PoEditor Parser v\(POEConstants.version)".blue)
-            print("-  Only Generate: \(onlyGenerate)".white)
-            print("-  Translation format: \(format)".white)
-            print("-  Export all languages: \(exportAll)".white)
+            print("-  Reading translations: \(input)".white)
             print("-  Generating Swift: \(swiftFile)".white)
-            print("-  Generating translations: \(translationsFile)".white)
             print("-  Type name: \(typeName)".white)
-            print("-  Table name: \(tableName ?? "NOT SET")".white)
             print("-  Output format: \(outputFormat)".white)
             print("-  Keys format: \(keysFormat)".white)
 
-            let translationStringContent: String
-
-            if !onlyGenerate {
-                guard let token else { throw AppError.missingOptionApiToken }
-                guard let id else { throw AppError.missingOptionProjectId }
-                guard let language else { throw AppError.missingOptionProjectLanguage }
-                print("ℹ️ Fetching contents of strings at POEditor...".blue)
-                print("🔄 Querying POEditor for the latest strings file...".magenta)
-                var request = URLRequest(url: URL(string: "\(poEditorApiUrl)/projects/export")!)
-                request.httpMethod = "POST"
-                var parameters = ""
-                    + "api_token=\(token)&"
-                    + "id=\(id)&"
-                    + "language=\(language)&"
-                    + "type=\(format.apiType)"
-
-                if exportAll {
-                    let options = "[{\"export_all\": 1}]"
-                        .addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
-                    parameters += "&options=\(options)"
-                }
-                request.httpBody = parameters.data(using: .utf8)
-                let data = try URLSession.shared.syncDataTask(with: request)
-                guard
-                    let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                    let result = json["result"] as? [String: Any],
-                    let urlString = result["url"] as? String,
-                    let url = URL(string: urlString)
-                else {
-                    throw AppError.apiConnectError
-                }
-                print("✅ Successfully got the latest URL for the strings file from POEditor".green)
-
-                print("🔄 Downloading the latest strings file from POEditor...".magenta)
-                print("URL: \(urlString)".lightWhite)
-                let downloadRequest = URLRequest(url: url)
-                let downloadData = try URLSession.shared.syncDataTask(with: downloadRequest)
-                guard let translationString = NSString(data: downloadData, encoding: String.Encoding.utf8.rawValue) as String? else {
-                    throw AppError.apiDownloadTermsError
-                }
-                print("✅ Successfully downloaded the latest strings file from POEditor!".green)
-                translationStringContent = translationString
-            } else {
-                print("✅ Fetching content from passed strings path".green)
-                print("ℹ️ Reading content from: \(translationsFile)".green)
-                guard let data = FileManager.default.contents(atPath: translationsFile) else {
-                    throw AppError.fileNotFound(file: translationsFile)
-                }
-                guard let content = String(data: data, encoding: .utf8) else {
-                    throw AppError.fileOpenError(file: translationsFile)
-                }
-
-                translationStringContent = content
+            guard let data = FileManager.default.contents(atPath: input) else {
+                throw AppError.fileNotFound(file: input)
+            }
+            guard let content = String(data: data, encoding: .utf8) else {
+                throw AppError.fileOpenError(file: input)
             }
 
-            print("ℹ️ Parsing translations file...".blue)
-            let parser: TranslationParser
-            switch format {
-            case .strings:
-                parser = StringTranslationParser(typeName: typeName,
-                                                 translation: translationStringContent,
-                                                 keysFormat: keysFormat)
-
-            case .xcstrings:
-                parser = XCStringsTranslationParser(typeName: typeName,
-                                                    translation: translationStringContent,
+            let parser = XCStringsTranslationParser(typeName: typeName,
+                                                    translation: content,
                                                     keysFormat: keysFormat,
                                                     preferredLanguage: language)
-            }
             let translations = try parser.parse().sorted()
 
             FileManager.default.createFile(atPath: swiftFile, contents: nil, attributes: nil)
@@ -119,24 +104,62 @@ public class Program {
                                                       outputFormat: outputFormat)
             fileCodeGenerator.generateCode(translations: translations)
             print("✅ Success! Literals generated at \(swiftFile)".green)
+        } catch let error {
+            print("❌ [ERROR] \(error.localizedDescription)".red)
+            throw error
+        }
+    }
 
-            switch format {
-            case .strings:
-                FileManager.default.createFile(atPath: translationsFile, contents: nil, attributes: nil)
-                guard let stringsHandle = FileHandle(forWritingAtPath: translationsFile) else {
-                    throw AppError.writeFileError(file: translationsFile)
-                }
-                let stringsFileGenerator = StringsFileGenerator(fileHandle: stringsHandle)
-                stringsFileGenerator.generateCode(translations: translations)
-                print("✅ Success! Strings generated at \(translationsFile)".green)
+    /// Split a multi-variant `.xcstrings` into a single-variant one.
+    public func distribute(input: String, out: String, variant: String) throws {
+        do {
+            guard !variant.isEmpty else { throw AppError.missingRequiredOption(option: "variant") }
+            let source = try StringCatalog(contentsOfFile: input)
+            let result = source.distributed(toSuffix: variant)
+            try result.write(toFile: out)
+            print("✅ Distributed \(variant): \(result.strings.count) keys → \(out)".green)
+        } catch let error {
+            print("❌ [ERROR] \(error.localizedDescription)".red)
+            throw error
+        }
+    }
 
-            case .xcstrings:
-                if !onlyGenerate {
-                    let normalized = XCStringsTranslationParser.normalizingPlaceholders(in: translationStringContent)
-                    try normalized.write(toFile: translationsFile, atomically: true, encoding: .utf8)
-                }
-                print("✅ Success! String catalog written at \(translationsFile)".green)
+    /// Keep only the changes of keys matching `keys` between a baseline and a
+    /// working `.xcstrings`; every other key falls back to the baseline.
+    public func filter(baseline: String, working: String, out: String, keys: [String]) throws {
+        do {
+            let matcher = KeyMatcher(patterns: keys)
+            guard !matcher.isEmpty else { return }
+            // Baseline may be absent/empty on the first migration (file not yet in
+            // HEAD): treat it as an empty catalog so every key shows up as an add
+            // and only filter-matching keys survive.
+            let base = (try? StringCatalog(contentsOfFile: baseline))
+                ?? StringCatalog(sourceLanguage: "es", version: "1.0", strings: [:])
+            let work = try StringCatalog(contentsOfFile: working)
+            let result = base.filtered(applying: work, keys: matcher)
+            try result.write(toFile: out)
+            print("✅ Filtered \(out) (\(result.strings.count) keys)".green)
+        } catch let error {
+            print("❌ [ERROR] \(error.localizedDescription)".red)
+            throw error
+        }
+    }
+
+    /// Remove every key matching `keys` from a `.xcstrings`.
+    public func remove(input: String, out: String, keys: [String], dryRun: Bool) throws {
+        do {
+            let matcher = KeyMatcher(patterns: keys)
+            guard !matcher.isEmpty else { throw AppError.missingRequiredOption(option: "keys") }
+            let source = try StringCatalog(contentsOfFile: input)
+            let removed = source.strings.keys.filter { matcher.matches($0) }.sorted()
+
+            if dryRun {
+                print("Dry-run: would remove \(removed.count) keys from \(input):".yellow)
+                removed.forEach { print("  - \($0)") }
+                return
             }
+            try source.removing(keys: matcher).write(toFile: out)
+            print("✅ Removed \(removed.count) keys → \(out)".green)
         } catch let error {
             print("❌ [ERROR] \(error.localizedDescription)".red)
             throw error
