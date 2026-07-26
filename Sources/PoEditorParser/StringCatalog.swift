@@ -148,9 +148,11 @@ extension StringCatalog.Entry {
         if let comment {
             entry["comment"] = comment
         }
-        if let extractionState {
-            entry["extractionState"] = extractionState
-        }
+        // Our keys are generated and live outside the project, so Xcode never
+        // finds them in source and warns unless they're marked manual. Default
+        // to "manual" so every write path (distribute/filter/remove) fixes keys
+        // that predate this behaviour, without needing a full re-download.
+        entry["extractionState"] = extractionState ?? "manual"
         return entry
     }
 }

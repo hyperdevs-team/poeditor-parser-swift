@@ -73,6 +73,39 @@ public class XCStringsTranslationParser: TranslationParser {
         return result
     }
 
+    /// Marks every key as manually managed (`"extractionState" : "manual"`).
+    ///
+    /// POEditor doesn't set this, so Xcode warns that each key "could not be
+    /// found in source code" — our keys are generated and live outside the
+    /// project, they're never extracted from source. Works on the raw JSON tree
+    /// (adds one field per entry, touches nothing else) so plurals and device
+    /// variations survive untouched.
+    public static func markingManualExtractionState(in catalog: String) -> String {
+        guard
+            let data = catalog.data(using: .utf8),
+            var json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+            var strings = json["strings"] as? [String: Any]
+        else {
+            return catalog
+        }
+        for (key, entry) in strings {
+            var entry = entry as? [String: Any] ?? [:]
+            entry["extractionState"] = "manual"
+            strings[key] = entry
+        }
+        json["strings"] = strings
+        guard
+            let out = try? JSONSerialization.data(
+                withJSONObject: json,
+                options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            ),
+            let string = String(data: out, encoding: .utf8)
+        else {
+            return catalog
+        }
+        return string
+    }
+
     private func value(from localizations: [String: Any], sourceLanguage: String?) -> String? {
         let ordered = [preferredLanguage, sourceLanguage].compactMap { $0 } + Array(localizations.keys)
         for language in ordered {

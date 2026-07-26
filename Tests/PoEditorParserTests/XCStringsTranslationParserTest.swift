@@ -64,6 +64,38 @@ func testXCStringsNormalizesPlaceholderVariables() throws {
 }
 
 @Test
+func testMarkingManualExtractionStateMarksEveryKeyLossless() throws {
+    let catalog = """
+    {
+      "sourceLanguage" : "en",
+      "strings" : {
+        "plain" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hi" } } } },
+        "count" : { "localizations" : { "en" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "value" : "1 item" } }, "other" : { "stringUnit" : { "value" : "%d items" } } } } } } }
+      },
+      "version" : "1.0"
+    }
+    """
+    let marked = XCStringsTranslationParser.markingManualExtractionState(in: catalog)
+    let json = try #require(try JSONSerialization.jsonObject(with: Data(marked.utf8)) as? [String: Any])
+    let strings = try #require(json["strings"] as? [String: Any])
+
+    for key in strings.keys {
+        let entry = try #require(strings[key] as? [String: Any])
+        #expect(entry["extractionState"] as? String == "manual")
+    }
+    // Plural variations survive untouched.
+    let count = try #require(strings["count"] as? [String: Any])
+    let localizations = try #require(count["localizations"] as? [String: Any])
+    let en = try #require(localizations["en"] as? [String: Any])
+    #expect(en["variations"] != nil)
+}
+
+@Test
+func testMarkingManualExtractionStateReturnsInputOnInvalidJSON() {
+    #expect(XCStringsTranslationParser.markingManualExtractionState(in: "not json") == "not json")
+}
+
+@Test
 func testXCStringsInvalidJSONThrows() throws {
     let parser = XCStringsTranslationParser(
         typeName: "Literals",
